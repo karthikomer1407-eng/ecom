@@ -102,12 +102,154 @@ def create_app():
     app.register_blueprint(orders_bp)
     app.register_blueprint(upload_bp)
 
-    # Create database tables and seed if brand new
+    # Complete catalog of 17 luxury perfumes with authentic images and pricing
+    luxury_catalog = [
+        {
+            "name": "Summer Oud",
+            "description": "A powerful and high projection long-lasting oud fragrance with a warm, elegant character. Designed for people who want a strong presence throughout the day.",
+            "price": 2499.0,
+            "sale_price": 1800.0,
+            "stock": 2,
+            "image": "/uploads/products/6596393647a94665ac4e6c893bfc13b6.webp",
+        },
+        {
+            "name": "Al Majed Oud Noir",
+            "description": "A dark and sophisticated fragrance combining rich woods, warm spices and a smooth luxurious finish.",
+            "price": 3099.0,
+            "sale_price": 2200.0,
+            "stock": 1,
+            "image": "/uploads/products/4551f0b7d3f74b288953a121945d581a.png",
+        },
+        {
+            "name": "Ahmed Oud Lavender",
+            "description": "Ahmed Al Maghribi Oud Lavender is a unisex fragnance that blends fresh, floral, and aromatic notes rather than a heavy or dominant oud scent. It is presented in a signature diamond-shaped bottle and is known for its balanced, spring-like freshness.",
+            "price": 4000.0,
+            "sale_price": 1999.0,
+            "stock": 18,
+            "image": "/uploads/products/15cb2eeaaffe4fff9661c162b8603312.webp",
+        },
+        {
+            "name": "Ahmed Al Maghribi Bin sheikh",
+            "description": "~This vintage scent is an exotic blend of distinct aromas. Earthy roses, spicy citrus, Fragrance Notes: Top: French Lavender, Saffron, Rose, Citrus, Oakmoss.",
+            "price": 6400.0,
+            "sale_price": 2200.0,
+            "stock": 10,
+            "image": "/uploads/products/a03957988fbe48d8933c5effbab09fb4.webp",
+        },
+        {
+            "name": "Mancera Red Tobacco",
+            "description": "Red Tobacco by Mancera is a Woody Spicy fragrance for women and men. This is a new fragrance. Red Tobacco was launched in 2017. A luxurious blend of warm and feisty accords brings the heat to those long, chilly fall and winter nights. A rich tapestry of features white musk, Madagascar vanilla, Haitian vetiver, sandalwood, guaiac wood, amber and tobacco. Pierre Montale is the nose behind this scent.",
+            "price": 9400.0,
+            "sale_price": 2100.0,
+            "stock": 3,
+            "image": "/uploads/products/811aed5a4f35415e9452705148224d8e.webp",
+        },
+        {
+            "name": "Layton Exclusif - Parfum De Marly",
+            "description": "This striking new take on Layton shakes up its original composition, creating a twist with a hint of cardamom together with sandalwood and guaiac wood essence. A fragrance which asserts its strength and impetuousness.",
+            "price": 39900.0,
+            "sale_price": 2000.0,
+            "stock": 2,
+            "image": "/uploads/products/23b66393e79e4d69921ca33946239870.webp",
+        },
+        {
+            "name": "Kilian's Angel Share",
+            "description": "Angels' Share by By Kilian is a Oriental Vanilla fragrance for women and men. Angels' Share was launched in 2020. The nose behind this fragrance is Benoist Lapouza. Top note is Cognac; middle notes are Cinnamon, Tonka Bean, Oak and Hedione; base notes are Vanilla, Praline, Sandalwood and Candied Almond.",
+            "price": 30000.0,
+            "sale_price": 2000.0,
+            "stock": 3,
+            "image": "/uploads/products/a179996504094188be6eb407da61c7ab.webp",
+        },
+        {
+            "name": "Stephane Humbert Lucas 777 God of Fire",
+            "description": "God of Fire by Stéphane Humbert Lucas 777 is a Amber Woody fragrance for women and men. This is a new fragrance. God of Fire was launched in 2022. The nose behind this fragrance is Stéphane Humbert Lucas.Symbol of power and wiseness, God of Fire Eau de Parfum is an exquisite fragrance where fresh and exotic notes hide an outstanding warm character. His incredible strength, leads him to rule the volcanos, his Oud heart burns intensely like a shamanic experience, leaving you regenerated and full of confidence.",
+            "price": 21000.0,
+            "sale_price": 2000.0,
+            "stock": 5,
+            "image": "/uploads/products/4111542b57c64d43a979351e65326a04.webp",
+        },
+        {
+            "name": "Gissah Imperial Valley",
+            "description": "Imperial Valley by Gissah is a Oriental Woody fragrance for women and men. Imperial Valley was launched in 2021. Top notes are Sicilian Bergamot, Pink Pepper and Davana; middle notes are Agarwood (Oud), White Amber and Rosemary; base notes are Leather, Musk and Haitian Vetiver.",
+            "price": 13000.0,
+            "sale_price": 2000.0,
+            "stock": 4,
+            "image": "/uploads/products/6da11071daf643d7af9af339059a512a.webp",
+        },
+        {
+            "name": "Lataffa khamrah",
+            "description": "Lattafa Khamrah is a captivating gourmand that opens with a spicy boldness of Cinnamon, Nutmeg and Bergamot. With a heart of Dates, Praline and Florals which is decadent, velvety and sensual at the same time. The fragrance finally settles into a luxuriously warm base of Amberwood, Vanilla, Myrrh and Roasted Tonka, leaving a deep, lingering trail that speaks of timeless elegance.",
+            "price": 4850.0,
+            "sale_price": 1800.0,
+            "stock": 5,
+            "image": "/uploads/products/ac5ea32adc3c49189c44690af72ff5c5.webp",
+        },
+        {
+            "name": "Chanel Allure Homme Sport",
+            "description": "Allure Homme Sport by Chanel is a Woody Spicy fragrance for men. Allure Homme Sport was launched in 2004. The nose behind this fragrance is Jacques Polge. Top notes are Orange, Sea Notes, Aldehydes and Blood Mandarin; middle notes are Pepper, Neroli and Cedar; base notes are Vanilla, Tonka Bean, White Musk, Amber, Vetiver and Elemi resin.",
+            "price": 18500.0,
+            "sale_price": 1700.0,
+            "stock": 5,
+            "image": "/uploads/products/23493b6650dd40d3888c41be93985b39.webp",
+        },
+        {
+            "name": "Ahmed Al Maghribi Marj",
+            "description": "Marj by Ahmed Al Maghribi is a fragrance for women and men. Marj was launched in 2023. Top notes are Oud, Honey, elemi, Pink Pepper, Nutmeg, Bergamot and Mandarin; middle notes are Cashmere Wood, Saffron, Orange Blossom, Jasmine, Cinnamon, Patchouli and Vetiver; base notes are Agarwood, Leather, Saffron, Amber, Raspberry, Sandalwood, Ambergris, Musk, Oakmoss, Violet and Pear.",
+            "price": 5600.0,
+            "sale_price": 2400.0,
+            "stock": 10,
+            "image": "/uploads/products/deb5b18c4ce840e88abb02329b60b84c.webp",
+        },
+        {
+            "name": "Reef 33",
+            "description": "Reef 33 by Reef Perfumes is a Oriental Woody fragrance for women and men. Reef 33 was launched in 2020. The nose behind this fragrance is Kevin Mathys. Top note is Indian Saffron; middle note is Rosemary; base note is Agarwood (Oud).",
+            "price": 13650.0,
+            "sale_price": 2200.0,
+            "stock": 100,
+            "image": "/uploads/products/9f94beef709a4336beca387208d92559.webp",
+        },
+        {
+            "name": "Tobacco Vanille",
+            "description": "Tom Ford Tobacco Vanille is an iconic warm, spicy, and sweet gourmand Eau de Parfum originally launched in 2007, inspired by classic London gentlemen's clubs.",
+            "price": 30999.0,
+            "sale_price": 1800.0,
+            "stock": 10,
+            "image": "/uploads/products/6559697899dd48e0b2bed7a524af7a4a.webp",
+        },
+        {
+            "name": "Initio Parfums Privés Oud for Greatness",
+            "description": "Oud for Greatness breathes out a force of nature, the wake of Greatness. The natural essence of Oud Wood has been perfected to this pitch, handled with majesty (and brutality) in this bold formula, scarcely highlighted by Patchouli and Musk. Superbly textured, strikingly natural, Oud has been handled by the creator in a register that is astonishingly fresh (Lavender) and spicy (Nutmeg, Saffron). An enchanting, thrilling perfume that makes all our dreams of greatness possible.",
+            "price": 41800.0,
+            "sale_price": 2000.0,
+            "stock": 60,
+            "image": "/uploads/products/063692e479554bc0852ea853e7798db4.webp",
+        },
+        {
+            "name": "Maison Crivelli Oud Maracuja",
+            "description": "Oud Maracujá by Maison Crivelli is a Leather fragrance for women and men. This is a new fragrance. Oud Maracujá was launched in 2023. The nose behind this fragrance is Jordi Fernández.Here's what other people are saying about Oud Maracuja... Potent woody gourmand scent centered around a heavy passion fruit accord. The fragrance opens with the central Maracujá (a type of Brazilian passion fruit) note with slight hints of saffron, rose, and other fruity notes.",
+            "price": 26500.0,
+            "sale_price": 2000.0,
+            "stock": 7,
+            "image": "/uploads/products/eba68dfca7e248d8b4b803a9385a4730.webp",
+        },
+        {
+            "name": "Amouage Interlude Man",
+            "description": "Amouage Interlude Man is an amber woody niche fragrance for men launched in 2012 by the perfume house Amouage and created by nose Pierre Negrin. Known widely as the \"Blue Beast,\" it is celebrated for its heavy smokiness, resinous depth, and massive performance.",
+            "price": 32400.0,
+            "sale_price": 2000.0,
+            "stock": 19,
+            "image": "/uploads/products/893918494b1349a6a6bd0bf49164290d.webp",
+        },
+    ]
+
+    # Create database tables and seed/sync full product catalog
     with app.app_context():
         db.create_all()
         try:
-            from .models import Category, Product
-            if Category.query.count() == 0 and Product.query.count() == 0:
+            from .models import CartItem, Category, Product
+
+            cat = Category.query.filter_by(name="Perfumes").first()
+            if not cat:
                 cat = Category(
                     name="Perfumes",
                     description="Premium fragrances and royal oud",
@@ -115,57 +257,27 @@ def create_app():
                 db.session.add(cat)
                 db.session.commit()
 
-                sample_products = [
-                    {
-                        "name": "Summer Oud",
-                        "description": "A powerful and long-lasting oud fragrance with a warm, elegant character.",
-                        "price": 1999,
-                        "sale_price": 1799,
-                        "stock": 25,
-                        "image": "/uploads/products/summer-oud.jpg",
-                    },
-                    {
-                        "name": "Amber Royale",
-                        "description": "A luxurious amber fragrance with warm oriental notes, creating a rich and elegant scent.",
-                        "price": 2299,
-                        "sale_price": 1999,
-                        "stock": 20,
-                        "image": "/uploads/products/amber-royale.jpg",
-                    },
-                    {
-                        "name": "Midnight Noir",
-                        "description": "A dark and sophisticated fragrance combining rich woods, warm spices and a smooth finish.",
-                        "price": 2499,
-                        "sale_price": 2199,
-                        "stock": 18,
-                        "image": "/uploads/products/midnight-noir.jpg",
-                    },
-                    {
-                        "name": "Velvet Musk",
-                        "description": "A smooth and sensual musk fragrance with a soft powdery character.",
-                        "price": 1899,
-                        "sale_price": 1699,
-                        "stock": 30,
-                        "image": "/uploads/products/velvet-musk.jpg",
-                    },
-                    {
-                        "name": "Royal Essence",
-                        "description": "An elegant premium fragrance crafted with rich woods and refined spices.",
-                        "price": 2799,
-                        "sale_price": 2499,
-                        "stock": 15,
-                        "image": "/uploads/products/royal-essence.jpg",
-                    },
-                    {
-                        "name": "Ocean Elixir",
-                        "description": "A fresh and energetic fragrance combining clean aquatic notes with masculine character.",
-                        "price": 1799,
-                        "sale_price": 1599,
-                        "stock": 22,
-                        "image": "/uploads/products/ocean-elixir.jpg",
-                    },
-                ]
-                for p_data in sample_products:
+            # Remove old placeholder dummy items if they are present on Render
+            dummy_names = {"Ocean Elixir", "Royal Essence", "Velvet Musk", "Midnight Noir", "Amber Royale"}
+            for dummy_p in Product.query.filter(Product.name.in_(dummy_names)).all():
+                try:
+                    CartItem.query.filter_by(product_id=dummy_p.id).delete()
+                    db.session.delete(dummy_p)
+                except Exception:
+                    db.session.rollback()
+            db.session.commit()
+
+            # Upsert full luxury catalog
+            for p_data in luxury_catalog:
+                prod = Product.query.filter_by(name=p_data["name"]).first()
+                if prod:
+                    prod.description = p_data["description"]
+                    prod.price = p_data["price"]
+                    prod.sale_price = p_data["sale_price"]
+                    prod.stock = p_data["stock"]
+                    prod.image = p_data["image"]
+                    prod.category_id = cat.id
+                else:
                     db.session.add(Product(
                         name=p_data["name"],
                         description=p_data["description"],
@@ -175,16 +287,16 @@ def create_app():
                         image=p_data["image"],
                         category_id=cat.id,
                     ))
-                db.session.commit()
+            db.session.commit()
         except Exception as e:  # noqa: BLE001
             app.logger.warning(f"Auto-seed check skipped: {e}")
 
-    # Home route
-    @app.route("/")
-    def home():
-        return {
-            "message": "E-commerce API is running!"
-        }
+    # Determine dist directory (backend/dist or ../frontend/dist)
+    dist_dir = os.path.abspath(os.path.join(app.root_path, "..", "dist"))
+    if not os.path.isdir(dist_dir):
+        alt_dist = os.path.abspath(os.path.join(app.root_path, "..", "..", "frontend", "dist"))
+        if os.path.isdir(alt_dist):
+            dist_dir = alt_dist
 
     # Serve uploaded product images
     @app.route("/uploads/products/<path:filename>")
@@ -193,6 +305,30 @@ def create_app():
             app.config["UPLOAD_FOLDER"],
             filename
         )
-        
+
+    # Serve compiled frontend (SPA) if dist folder is available
+    if os.path.isdir(dist_dir):
+        @app.route("/", defaults={"path": ""})
+        @app.route("/<path:path>")
+        def serve_frontend(path):
+            if path.startswith("api/") or path == "api":
+                return {"error": "Not found"}, 404
+            file_path = os.path.join(dist_dir, path)
+            if path and os.path.isfile(file_path):
+                return send_from_directory(dist_dir, path)
+            return send_from_directory(dist_dir, "index.html")
+    else:
+        @app.route("/")
+        def home():
+            return {
+                "message": "E-commerce API is running!",
+                "status": "healthy",
+                "endpoints": {
+                    "products": "/api/products/",
+                    "categories": "/api/categories/",
+                    "cart": "/api/cart/",
+                    "orders": "/api/orders/"
+                }
+            }
 
     return app

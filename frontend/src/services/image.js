@@ -1,5 +1,17 @@
 
-const API_SERVER = (import.meta.env.VITE_API_URL || "http://127.0.0.1:5000").replace(/\/+$/, "");
+const getApiServer = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL.replace(/\/+$/, "");
+  }
+  if (
+    typeof window !== "undefined" &&
+    window.location.hostname !== "localhost" &&
+    window.location.hostname !== "127.0.0.1"
+  ) {
+    return window.location.origin;
+  }
+  return "http://127.0.0.1:5000";
+};
 
 export function getImageUrl(image) {
   if (!image) return "";
@@ -8,5 +20,6 @@ export function getImageUrl(image) {
     return image;
   }
 
-  return `${API_SERVER}/${image.replace(/^\/+/, "")}`;
+  const server = getApiServer();
+  return `${server}/${image.replace(/^\/+/, "")}`;
 }
