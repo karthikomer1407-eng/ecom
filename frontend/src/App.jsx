@@ -23,10 +23,9 @@ function AdminSessionManager() {
   const location = useLocation();
 
   useEffect(() => {
-    const isAdminPage = location.pathname.startsWith("/admin/") &&
-      location.pathname !== "/admin/login";
+    const isAdminRoute = location.pathname.startsWith("/admin");
 
-    if (!isAdminPage) {
+    if (!isAdminRoute) {
       sessionStorage.removeItem("adminToken");
       localStorage.removeItem("adminToken");
     }
@@ -67,7 +66,11 @@ function App() {
           />
           <Route
             path="/admin/categories"
-            element={<AdminCategories />}
+            element={
+              <ProtectedRoute>
+                <AdminCategories />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/admin/orders"

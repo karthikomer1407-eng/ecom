@@ -288,6 +288,24 @@ def create_app():
                         category_id=cat.id,
                     ))
             db.session.commit()
+
+            # Ensure Admin User exists in database (DD / Dcruiz1407)
+            from .models import AdminUser
+
+            admin_user = os.environ.get("ADMIN_USERNAME", "DD")
+            admin_pwd = os.environ.get("ADMIN_PASSWORD", "Dcruiz1407")
+
+            admin = AdminUser.query.filter(AdminUser.username.ilike(admin_user)).first()
+            if not admin:
+                admin = AdminUser(username=admin_user)
+                admin.set_password(admin_pwd)
+                db.session.add(admin)
+                db.session.commit()
+            else:
+                admin.set_password(admin_pwd)
+                db.session.commit()
+
+            db.session.commit()
         except Exception as e:  # noqa: BLE001
             app.logger.warning(f"Auto-seed check skipped: {e}")
 

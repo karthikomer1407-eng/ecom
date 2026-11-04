@@ -19,7 +19,7 @@ def login():
     if not username or not password:
         return jsonify({"error": "Username and password are required"}), 400
 
-    admin = AdminUser.query.filter_by(username=username).first()
+    admin = AdminUser.query.filter(AdminUser.username.ilike(username)).first()
     if not admin or not admin.check_password(password):
         return jsonify({"error": "Invalid username or password"}), 401
 
