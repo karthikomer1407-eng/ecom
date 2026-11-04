@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
+import Preloader from "./components/Preloader";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import ProductDetails from "./pages/ProductDetails";
@@ -35,10 +36,16 @@ function AdminSessionManager() {
 }
 
 function App() {
+  const [showPreloader, setShowPreloader] = useState(true);
+
   return (
-    <BrowserRouter>
-      <AdminSessionManager />
-      <Navbar />
+    <>
+      {showPreloader && (
+        <Preloader onComplete={() => setShowPreloader(false)} />
+      )}
+      <BrowserRouter>
+        <AdminSessionManager />
+        <Navbar />
 
       <main>
         <Routes>
@@ -75,6 +82,7 @@ function App() {
 
       <Footer />
     </BrowserRouter>
+    </>
   );
 }
 
