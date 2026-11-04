@@ -154,7 +154,7 @@ def update_category(category_id):
         return jsonify({"error": "Failed to update category"}), 500
 
 
-# DELETE CATEGORY
+# DELETE CATEGORYS
 @category_bp.route("/<int:category_id>", methods=["DELETE"])
 def delete_category(category_id):
     category = db.session.get(Category, category_id)

@@ -204,7 +204,7 @@ def update_product(id):
     }), 200
 
 
-# DELETE PRODUCT (Secured!)
+# DELETE PRODUCTS (Secured!)
 @product_bp.route("/<int:id>", methods=["DELETE"])
 @token_required     # <--- ADDED HERE
 def delete_product(id):
