@@ -1,5 +1,5 @@
 
-const API_SERVER = "http://127.0.0.1:5000";
+const API_SERVER = (import.meta.env.VITE_API_URL || "http://127.0.0.1:5000").replace(/\/+$/, "");
 
 export function getImageUrl(image) {
   if (!image) return "";
