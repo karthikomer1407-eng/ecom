@@ -435,10 +435,14 @@ def track_order():
         "".join(character for character in order.phone if character.isdigit())
         if order else ""
     )
+    order_last10 = order_phone_digits[-10:] if len(order_phone_digits) >= 10 else order_phone_digits
+    input_last10 = phone_digits[-10:] if len(phone_digits) >= 10 else phone_digits
+
+    phone_matches = (order_phone_digits == phone_digits) or (order_last10 == input_last10)
     if (
         not order
         or order.email.strip().casefold() != email.strip().casefold()
-        or order_phone_digits != phone_digits
+        or not phone_matches
     ):
         return jsonify({"error": "We could not find an order with those details"}), 404
 
@@ -479,13 +483,16 @@ def list_customer_orders():
     if not phone_digits:
         return jsonify({"error": "Enter the email and phone number used at checkout"}), 400
 
+    input_last10 = phone_digits[-10:] if len(phone_digits) >= 10 else phone_digits
     matching_orders = Order.query.filter(
         db.func.lower(Order.email) == email.strip().lower()
     ).order_by(Order.created_at.desc()).all()
-    orders = [
-        order for order in matching_orders
-        if "".join(character for character in order.phone if character.isdigit()) == phone_digits
-    ]
+    orders = []
+    for order in matching_orders:
+        o_digits = "".join(character for character in order.phone if character.isdigit())
+        o_last10 = o_digits[-10:] if len(o_digits) >= 10 else o_digits
+        if o_digits == phone_digits or o_last10 == input_last10:
+            orders.append(order)
     if not orders:
         return jsonify({"error": "We could not find orders with those details"}), 404
 
