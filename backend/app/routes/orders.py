@@ -21,6 +21,7 @@ from app.models import (
     RazorpayWebhookEvent,
 )
 from app.routes.auth import token_required
+from app.services.order_email import send_order_confirmation
 
 ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
 if ENV_FILE.is_file():
@@ -123,6 +124,14 @@ def finalize_paid_order(order, payment_id):
         return jsonify({
             "error": "Payment verified, but the order update failed"
         }), 500
+
+    try:
+        send_order_confirmation(order)
+    except Exception:  # noqa: BLE001
+        current_app.logger.exception(
+            "Payment was confirmed, but the confirmation email failed for order %s",
+            order.id,
+        )
 
     response = {
         "message": "Payment verified",
@@ -394,6 +403,107 @@ def place_order():
 # SECURE ADMIN ROUTES (Viewing/Updating)
 # ==========================================
 
+@orders_bp.route("/track", methods=["POST"])
+def track_order():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Order number, checkout email, and phone are required"}), 400
+
+    raw_order_id = data.get("order_id")
+    email = data.get("email")
+    phone = data.get("phone")
+    try:
+        order_id = int(raw_order_id)
+    except (TypeError, ValueError):
+        return jsonify({"error": "Enter a valid order number, email, and phone"}), 400
+
+    if (
+        order_id < 1
+        or not isinstance(email, str)
+        or not email.strip()
+        or not isinstance(phone, str)
+        or not phone.strip()
+    ):
+        return jsonify({"error": "Enter the checkout email and phone number"}), 400
+
+    order = Order.query.filter_by(id=order_id).first()
+    phone_digits = "".join(character for character in phone if character.isdigit())
+    if not phone_digits:
+        return jsonify({"error": "Enter the phone number used at checkout"}), 400
+
+    order_phone_digits = (
+        "".join(character for character in order.phone if character.isdigit())
+        if order else ""
+    )
+    if (
+        not order
+        or order.email.strip().casefold() != email.strip().casefold()
+        or order_phone_digits != phone_digits
+    ):
+        return jsonify({"error": "We could not find an order with those details"}), 404
+
+    return jsonify({
+        "order_id": order.id,
+        "status": order.status,
+        "payment_status": order.payment_status,
+        "created_at": order.created_at.strftime("%b %d, %Y") if order.created_at else None,
+        "items": [
+            {
+                "product_name": item.product_name,
+                "quantity": item.quantity,
+                "price": item.price_at_purchase,
+            }
+            for item in order.items
+        ],
+        "total_amount": order.total_amount,
+    }), 200
+
+
+@orders_bp.route("/list", methods=["POST"])
+def list_customer_orders():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Checkout email and phone number are required"}), 400
+
+    email = data.get("email")
+    phone = data.get("phone")
+    if (
+        not isinstance(email, str)
+        or not email.strip()
+        or not isinstance(phone, str)
+        or not phone.strip()
+    ):
+        return jsonify({"error": "Checkout email and phone number are required"}), 400
+
+    phone_digits = "".join(character for character in phone if character.isdigit())
+    if not phone_digits:
+        return jsonify({"error": "Enter the email and phone number used at checkout"}), 400
+
+    matching_orders = Order.query.filter(
+        db.func.lower(Order.email) == email.strip().lower()
+    ).order_by(Order.created_at.desc()).all()
+    orders = [
+        order for order in matching_orders
+        if "".join(character for character in order.phone if character.isdigit()) == phone_digits
+    ]
+    if not orders:
+        return jsonify({"error": "We could not find orders with those details"}), 404
+
+    return jsonify([
+        {
+            "order_id": order.id,
+            "status": order.status,
+            "payment_status": order.payment_status,
+            "created_at": order.created_at.strftime("%b %d, %Y") if order.created_at else None,
+            "items": [
+                {"product_name": item.product_name, "quantity": item.quantity}
+                for item in order.items
+            ],
+            "total_amount": order.total_amount,
+        }
+        for order in orders
+    ]), 200
+
 # GET ALL ORDERS
 @orders_bp.route("/", methods=["GET"])
 @token_required
@@ -420,6 +530,7 @@ def get_all_orders():
             "address": f"{order.address}, {order.city} - {order.postal_code}",
             "total_amount": order.total_amount,
             "status": order.status,
+            "payment_status": order.payment_status,
             "created_at": order.created_at.strftime("%b %d, %Y - %I:%M %p"),
             "items": items
         })

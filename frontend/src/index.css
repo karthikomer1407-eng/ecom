@@ -92,6 +92,10 @@ select {
   gap: 1rem;
 }
 
+.navbar-track-mobile {
+  display: none;
+}
+
 .navbar-cart {
   display: inline-flex;
   align-items: center;
@@ -884,6 +888,16 @@ select {
 
   .nav-links {
     display: none;
+  }
+
+  .navbar-track-mobile {
+    display: inline-flex;
+    align-items: center;
+    color: var(--gold-soft);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
   }
 
   .logo {

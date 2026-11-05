@@ -57,10 +57,12 @@ function Navbar() {
         <Link to="/">Home</Link>
         <Link to="/">Products</Link>
         <Link to="/cart">Cart</Link>
+        <Link to="/track-order">Track Order</Link>
         <Link to="/admin/products">Admin</Link>
       </div>
 
       <div className="nav-actions">
+        <Link to="/track-order" className="navbar-track-mobile">Track</Link>
         <button
           type="button"
           className="navbar-cart"

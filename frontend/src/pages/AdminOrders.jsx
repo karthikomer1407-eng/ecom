@@ -15,6 +15,7 @@ function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [orderFilter, setOrderFilter] = useState("all");
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -48,6 +49,18 @@ function AdminOrders() {
 
   const pendingCount = orders.filter((o) => o.status === "Pending").length;
   const revenue = orders.reduce((sum, o) => sum + o.total_amount, 0);
+  const confirmedOrders = orders.filter(
+    (order) =>
+      order.payment_status === "Paid" &&
+      !["Delivered", "Cancelled"].includes(order.status)
+  );
+  const finishedOrders = orders.filter((order) => order.status === "Delivered");
+  const visibleOrders =
+    orderFilter === "confirmed"
+      ? confirmedOrders
+      : orderFilter === "finished"
+        ? finishedOrders
+        : orders;
 
   if (loading) {
     return <div className="admin-loading">Loading orders...</div>;
@@ -113,15 +126,39 @@ function AdminOrders() {
             <button className="refresh-button" onClick={fetchOrders}>↻ Refresh</button>
           </div>
 
+          <div className="admin-order-filters" role="tablist" aria-label="Order lists">
+            {[
+              { key: "all", label: "All Orders", count: orders.length },
+              { key: "confirmed", label: "Confirmed", count: confirmedOrders.length },
+              { key: "finished", label: "Finished", count: finishedOrders.length },
+            ].map((filter) => (
+              <button
+                type="button"
+                role="tab"
+                aria-selected={orderFilter === filter.key}
+                className={orderFilter === filter.key ? "active" : ""}
+                key={filter.key}
+                onClick={() => setOrderFilter(filter.key)}
+              >
+                {filter.label} <span>{filter.count}</span>
+              </button>
+            ))}
+          </div>
+          <p className="admin-order-filter-note">
+            Confirmed means payment received and not yet delivered. Finished means delivered.
+          </p>
+
           {error ? (
             <div className="admin-error"><p>{error}</p></div>
           ) : (
             <div className="admin-order-list">
-              {orders.length === 0 && (
-                <div className="admin-empty"><h3>No orders yet</h3></div>
+              {visibleOrders.length === 0 && (
+                <div className="admin-empty">
+                  <h3>{orders.length === 0 ? "No orders yet" : "No orders in this list"}</h3>
+                </div>
               )}
 
-              {orders.map((order) => (
+              {visibleOrders.map((order) => (
                 <article className="admin-order-card" key={order.id}>
                   <div className="order-header">
                     <div className="order-id-date">
@@ -149,6 +186,7 @@ function AdminOrders() {
                       <p><strong>{order.full_name}</strong></p>
                       <p>{order.email}</p>
                       <p>{order.phone}</p>
+                      <p className="order-payment-status">Payment: {order.payment_status}</p>
                       <p className="order-address">{order.address}</p>
                     </div>
 
