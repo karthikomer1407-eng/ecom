@@ -23,27 +23,31 @@ from app.models import (
 from app.routes.auth import token_required
 
 ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
-load_dotenv(ENV_FILE, override=True)
-RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
-RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
-RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET")
-print("Razorpay .env file exists:", ENV_FILE.is_file())
-print("Razorpay Key ID loaded:", bool(RAZORPAY_KEY_ID))
-print("Razorpay Secret loaded:", bool(RAZORPAY_KEY_SECRET))
+if ENV_FILE.is_file():
+    load_dotenv(ENV_FILE, override=True)
+
+DEFAULT_RAZORPAY_KEY_ID = "rzp_live_Tw49qARd7wTsXH"
+DEFAULT_RAZORPAY_KEY_SECRET = "uuzvtMqXx13NiV99KJhYOAuA"
+DEFAULT_RAZORPAY_WEBHOOK_SECRET = "Dcruiz1407"
 
 
 def _is_configured_credential(value):
-    if not value or not value.strip():
+    if not value or not str(value).strip():
         return False
-    normalized = value.strip().lower()
+    normalized = str(value).strip().lower()
     return not any(
         marker in normalized
         for marker in ("your_", "replace_me", "placeholder", "example")
     )
 
 
-print("Razorpay Key ID usable:", _is_configured_credential(RAZORPAY_KEY_ID))
-print("Razorpay Secret usable:", _is_configured_credential(RAZORPAY_KEY_SECRET))
+env_key_id = os.getenv("RAZORPAY_KEY_ID")
+env_key_secret = os.getenv("RAZORPAY_KEY_SECRET")
+env_webhook_secret = os.getenv("RAZORPAY_WEBHOOK_SECRET")
+
+RAZORPAY_KEY_ID = env_key_id if _is_configured_credential(env_key_id) else DEFAULT_RAZORPAY_KEY_ID
+RAZORPAY_KEY_SECRET = env_key_secret if _is_configured_credential(env_key_secret) else DEFAULT_RAZORPAY_KEY_SECRET
+RAZORPAY_WEBHOOK_SECRET = env_webhook_secret if _is_configured_credential(env_webhook_secret) else DEFAULT_RAZORPAY_WEBHOOK_SECRET
 
 razorpay_client: Any = None
 if _is_configured_credential(RAZORPAY_KEY_ID) and _is_configured_credential(
@@ -134,6 +138,11 @@ def finalize_paid_order(order, payment_id):
 
 @orders_bp.route("/create-payment-order", methods=["POST"])
 def create_payment_order():
+    global razorpay_client
+    if not razorpay_client:
+        if _is_configured_credential(RAZORPAY_KEY_ID) and _is_configured_credential(RAZORPAY_KEY_SECRET):
+            razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+
     if not razorpay_client:
         return jsonify({
             "error": (

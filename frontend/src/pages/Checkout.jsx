@@ -83,22 +83,26 @@ function Checkout() {
       const paymentOrder = orderResponse.data;
 
       // 3. Open Razorpay Checkout.
-      // Clean phone number: strip non-digits and ensure 10-digit format for Razorpay validation
-      const sanitizedPhone = (formData.phone || "").replace(/\D/g, "").slice(-10);
+      const rawPhone = (formData.phone || "").replace(/\D/g, "");
+      const sanitizedPhone = rawPhone.length >= 10 ? rawPhone.slice(-10) : "";
+
+      const prefillData = {
+        name: formData.fullName?.trim() || "",
+        email: formData.email?.trim() || "",
+      };
+      if (sanitizedPhone) {
+        prefillData.contact = sanitizedPhone;
+      }
 
       const options = {
-        key: paymentOrder.key_id,
+        key: paymentOrder.key_id || paymentOrder.razorpay_key_id,
         amount: paymentOrder.amount,
-        currency: paymentOrder.currency,
+        currency: paymentOrder.currency || "INR",
         name: "Hayati Elixirs",
         description: "Royal Arabian Fragrances Order",
         order_id: paymentOrder.order_id,
 
-        prefill: {
-          name: formData.fullName?.trim() || "",
-          email: formData.email?.trim() || "",
-          contact: sanitizedPhone,
-        },
+        prefill: prefillData,
 
         theme: {
           color: "#d4af37",
