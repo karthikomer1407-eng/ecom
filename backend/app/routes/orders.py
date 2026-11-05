@@ -238,6 +238,7 @@ def create_payment_order():
             "amount": round(total_amount * 100),
             "currency": "INR",
             "receipt": f"order_{uuid.uuid4().hex[:24]}",
+            "payment_capture": 1,
             "notes": {"local_order_id": str(new_order.id)},
         })
     except Exception as e:  # noqa: BLE001
@@ -327,7 +328,13 @@ def verify_payment():
         db.session.rollback()
         return jsonify({"error": "Payment does not match this order"}), 400
 
-    if payment.get("status") != "captured":
+    if payment.get("status") == "authorized":
+        try:
+            payment = razorpay_client.payment.capture(razorpay_payment_id, expected_amount)
+        except Exception:
+            current_app.logger.exception("Could not auto-capture authorized payment")
+
+    if payment.get("status") not in ("captured", "authorized"):
         db.session.rollback()
         return jsonify({
             "error": "Payment has not been captured yet",

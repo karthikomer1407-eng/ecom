@@ -173,9 +173,13 @@ function Checkout() {
         const reasonMsg = err.reason ? `\nReason: ${err.reason}` : "";
         const descMsg = err.description || "The transaction was declined.";
 
-        alert(
-          `Payment Failed: ${descMsg}${reasonMsg}\n\nTip for Razorpay Test Mode: Use UPI ID 'success@razorpay' or standard test card '4111 1111 1111 1111' to simulate a successful payment.`
-        );
+        if (descMsg.toLowerCase().includes("registered website") || (err.reason && err.reason.includes("risk_check"))) {
+          alert(
+            `Payment Blocked by Razorpay Risk Protection:\n\n${descMsg}\n\nTo allow payments from your new domain, please add your domain in:\nRazorpay Dashboard -> Account & Settings -> Website and App Settings.`
+          );
+        } else {
+          alert(`Payment Failed: ${descMsg}${reasonMsg}`);
+        }
 
         setPlacingOrder(false);
       });
