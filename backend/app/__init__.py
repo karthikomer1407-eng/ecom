@@ -9,33 +9,15 @@ from .extensions import db
 
 def create_app():
     app = Flask(__name__)
-    cors_origins = [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:5174",
-        "http://127.0.0.1:5174",
-        "http://localhost:5175",
-        "http://127.0.0.1:5175",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        r"^https?://localhost(:\d+)?$",
-        r"^https?://127\.0\.0\.1(:\d+)?$",
-        r"^https?://.*\.onrender\.com$",
-        r"^https?://.*\.vercel\.app$",
-        r"^https?://.*\.netlify\.app$",
-    ]
-
-    frontend_url = os.environ.get("FRONTEND_URL")
-    if frontend_url and frontend_url not in cors_origins:
-        cors_origins.append(frontend_url)
-
+    # Enable CORS for all frontend clients, development servers, and custom domains
     CORS(
         app,
         resources={
-            r"/api/*": {"origins": cors_origins},
-            r"/uploads/*": {"origins": cors_origins},
+            r"/api/*": {"origins": r"^https?://.*$"},
+            r"/uploads/*": {"origins": r"^https?://.*$"},
         },
-        allow_headers=["Content-Type", "X-Cart-Session", "Authorization"],
+        allow_headers=["Content-Type", "X-Cart-Session", "Authorization", "Accept", "Origin", "X-Requested-With"],
+        expose_headers=["Content-Type", "X-Cart-Session", "Authorization"],
         methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         supports_credentials=True,
     )
