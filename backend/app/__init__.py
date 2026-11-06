@@ -298,13 +298,16 @@ def create_app():
         if os.path.isdir(alt_dist):
             dist_dir = alt_dist
 
-    # Serve uploaded product images
+    # Serve uploaded product images with high-performance immutable caching
     @app.route("/uploads/products/<path:filename>")
     def uploaded_product_image(filename):
-        return send_from_directory(
+        response = send_from_directory(
             app.config["UPLOAD_FOLDER"],
-            filename
+            filename,
+            max_age=31536000,
         )
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return response
 
     # Serve compiled frontend (SPA) if dist folder is available
     if os.path.isdir(dist_dir):

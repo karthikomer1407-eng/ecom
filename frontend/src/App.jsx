@@ -36,12 +36,25 @@ function AdminSessionManager() {
 }
 
 function App() {
-  const [showPreloader, setShowPreloader] = useState(true);
+  const [showPreloader, setShowPreloader] = useState(() => {
+    try {
+      return !sessionStorage.getItem("hayati_intro_seen");
+    } catch {
+      return true;
+    }
+  });
+
+  const handlePreloaderComplete = () => {
+    setShowPreloader(false);
+    try {
+      sessionStorage.setItem("hayati_intro_seen", "true");
+    } catch {}
+  };
 
   return (
     <>
       {showPreloader && (
-        <Preloader onComplete={() => setShowPreloader(false)} />
+        <Preloader onComplete={handlePreloaderComplete} />
       )}
       <BrowserRouter>
         <AdminSessionManager />

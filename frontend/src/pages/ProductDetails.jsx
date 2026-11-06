@@ -2,13 +2,26 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { getImageUrl } from "../services/image";
+import INITIAL_PRODUCTS from "../data/initialProducts";
 
 function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [product, setProduct] = useState(() => {
+    try {
+      const cached = localStorage.getItem("hayati_cached_products");
+      if (cached) {
+        const list = JSON.parse(cached);
+        if (Array.isArray(list)) {
+          const found = list.find((p) => String(p.id) === String(id));
+          if (found) return found;
+        }
+      }
+    } catch (e) {}
+    return INITIAL_PRODUCTS.find((p) => String(p.id) === String(id)) || null;
+  });
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const [quantity, setQuantity] = useState(1);
@@ -20,16 +33,18 @@ function ProductDetails() {
   async function fetchProduct() {
     try {
       const response = await api.get(`/products/${id}`);
-
-      setProduct(response.data);
-    } catch (error) {
-      console.error(error);
-
-      setError("Product not found.");
+      if (response.data) {
+        setProduct(response.data);
+      }
+    } catch (err) {
+      console.warn("Background product fetch:", err);
+      if (!product) {
+        setError("Product not found.");
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const increaseQuantity = () => {
     if (quantity < product.stock) {
@@ -88,7 +103,7 @@ function ProductDetails() {
     }
   };
 
-  if (loading) {
+  if (loading && !product) {
     return (
       <div className="page-message">
         Loading product...
@@ -96,7 +111,7 @@ function ProductDetails() {
     );
   }
 
-  if (error || !product) {
+  if (error && !product) {
     return (
       <div className="page-message">
         <h2>{error}</h2>

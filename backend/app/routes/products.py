@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from sqlalchemy.orm import joinedload
 
 from app.extensions import db
 from app.models import Category, Product
@@ -7,12 +8,12 @@ from app.routes.auth import token_required
 product_bp = Blueprint("products", __name__, url_prefix="/api/products")
 
 
-# GET ALL PRODUCTS (Public - No token required)
+# GET ALL PRODUCTS (Public - High Performance with joinedload & edge caching)
 @product_bp.route("/", methods=["GET"])
 def get_products():
     sort = request.args.get("sort", "newest")
 
-    query = Product.query
+    query = Product.query.options(joinedload(Product.category))
 
     if sort == "newest":
         query = query.order_by(Product.id.desc())
@@ -30,7 +31,6 @@ def get_products():
     products = query.all()
 
     result = []
-
     for product in products:
         result.append({
             "id": product.id,
@@ -41,26 +41,27 @@ def get_products():
             "stock": product.stock,
             "image": product.image,
             "category": {
-                "id": product.category.id,
-                "name": product.category.name
+                "id": product.category.id if product.category else None,
+                "name": product.category.name if product.category else ""
             }
         })
 
-    return jsonify(result), 200
+    response = jsonify(result)
+    response.headers["Cache-Control"] = "public, max-age=60, s-maxage=300, stale-while-revalidate=86400"
+    return response, 200
 
 
 # GET SINGLE PRODUCT (Public - No token required)
 @product_bp.route("/<int:id>", methods=["GET"])
 def get_product(id):
-
-    product = Product.query.get(id)
+    product = Product.query.options(joinedload(Product.category)).get(id)
 
     if not product:
         return jsonify({
             "error": "Product not found"
         }), 404
 
-    return jsonify({
+    response = jsonify({
         "id": product.id,
         "name": product.name,
         "description": product.description,
@@ -69,10 +70,12 @@ def get_product(id):
         "stock": product.stock,
         "image": product.image,
         "category": {
-            "id": product.category.id,
-            "name": product.category.name
+            "id": product.category.id if product.category else None,
+            "name": product.category.name if product.category else ""
         }
-    }), 200
+    })
+    response.headers["Cache-Control"] = "public, max-age=60, s-maxage=300, stale-while-revalidate=86400"
+    return response, 200
 
 
 # CREATE PRODUCT (Secured!)

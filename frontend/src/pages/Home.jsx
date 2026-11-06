@@ -4,11 +4,27 @@ import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { getImageUrl } from "../services/image";
 import Hero from "../components/Hero";
+import INITIAL_PRODUCTS from "../data/initialProducts";
+
+const CACHE_KEY = "hayati_cached_products";
 
 function Home() {
   const navigate = useNavigate();
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState(() => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not read cached products", e);
+    }
+    return INITIAL_PRODUCTS;
+  });
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [mobileGridMode, setMobileGridMode] = useState("grid"); // "grid" (2 cols) or "single" (1 col)
   const [instantBuyingId, setInstantBuyingId] = useState(null);
@@ -29,17 +45,30 @@ function Home() {
   });
 
   useEffect(() => {
+    let isMounted = true;
     api
       .get("/products/?sort=newest")
       .then((response) => {
-        setProducts(response.data);
+        if (!isMounted) return;
+        if (Array.isArray(response.data) && response.data.length > 0) {
+          setProducts(response.data);
+          try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify(response.data));
+          } catch (e) {
+            console.warn("Could not save products cache", e);
+          }
+        }
         setLoading(false);
       })
-      .catch((error) => {
-        console.error(error);
-        setError("Unable to load products");
+      .catch((err) => {
+        if (!isMounted) return;
+        console.warn("Background products refresh:", err);
         setLoading(false);
       });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleAddToCart = async (product) => {
@@ -183,7 +212,7 @@ function Home() {
     }
   });
 
-  if (loading) {
+  if (loading && products.length === 0) {
     return (
       <div className="status">
         <h2>Loading products...</h2>
@@ -191,7 +220,7 @@ function Home() {
     );
   }
 
-  if (error) {
+  if (error && products.length === 0) {
     return (
       <div className="status error">
         <h2>{error}</h2>
