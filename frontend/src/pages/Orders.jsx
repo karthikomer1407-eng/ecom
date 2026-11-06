@@ -246,8 +246,8 @@ export default function Orders() {
     : encodeURIComponent(
         "Hello Hayati Elixirs Royal Concierge, I have an inquiry about an order."
       );
-  const waLink = `https://wa.me/919876543210?text=${waMessage}`;
-  const mailtoLink = `mailto:support@hayatielixirs.com?subject=${encodeURIComponent(
+  const waLink = `https://wa.me/918606607343?text=${waMessage}`;
+  const mailtoLink = `mailto:karthikomer1407@gmail.com?subject=${encodeURIComponent(
     currentOrderId ? `Support Request for Order #${currentOrderId}` : "Hayati Elixirs Support Request"
   )}`;
 
@@ -631,7 +631,7 @@ export default function Orders() {
                 <div className="order-help-callout">
                   <h4>Need to alter this order?</h4>
                   <p>
-                    Reach out immediately with Order <strong>#{selectedOrder.order_id}</strong> via WhatsApp or email to modify delivery instructions before departure.
+                    Reach out immediately with Order <strong>#{selectedOrder.order_id}</strong> via WhatsApp (+91 8606607343) or email (karthikomer1407@gmail.com) to modify delivery instructions before departure.
                   </p>
                   <a
                     href={waLink}
@@ -672,7 +672,7 @@ export default function Orders() {
               >
                 Chat on WhatsApp ➔
               </a>
-              <span className="channel-note">Typically replies within 5–15 minutes</span>
+              <span className="channel-note">+91 8606607343 · Replies within 5–15 minutes</span>
             </div>
 
             {/* Email Support Card */}
@@ -683,7 +683,7 @@ export default function Orders() {
               <a href={mailtoLink} className="channel-action-btn email-action">
                 Email Support ➔
               </a>
-              <span className="channel-note">support@hayatielixirs.com</span>
+              <span className="channel-note">karthikomer1407@gmail.com</span>
             </div>
 
             {/* In-App Ticket Card */}
@@ -838,7 +838,7 @@ export default function Orders() {
                     <input
                       id="sup-phone"
                       type="tel"
-                      placeholder="e.g. 9876543210"
+                      placeholder="e.g. 8606607343"
                       value={supportForm.phone}
                       onChange={(e) =>
                         setSupportForm({ ...supportForm, phone: e.target.value })

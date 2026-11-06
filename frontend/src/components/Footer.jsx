@@ -21,10 +21,18 @@ function Footer() {
         </div>
 
         <div className="footer-column">
-          <h3>The House</h3>
-          <span>Thoughtfully chosen scents</span>
-          <span>Composed for every occasion</span>
-          <span>A signature, made personal</span>
+          <h3>Customer Care</h3>
+          <a
+            href="https://wa.me/918606607343"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            WhatsApp: +91 8606607343
+          </a>
+          <a href="mailto:karthikomer1407@gmail.com">
+            karthikomer1407@gmail.com
+          </a>
+          <span>24/7 Royal Concierge</span>
         </div>
 
         <div className="footer-note">

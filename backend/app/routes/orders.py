@@ -625,9 +625,11 @@ def customer_support_inquiry():
 
     return jsonify({
         "success": True,
-        "message": "Your support request has been received by our Royal Concierge. We will reply via WhatsApp or email shortly.",
+        "message": "Your support request has been received by our Royal Concierge. We will reply via WhatsApp (+91 8606607343) or email (karthikomer1407@gmail.com) shortly.",
         "ticket_id": ticket_id,
         "order_id": order_id,
+        "whatsapp": "+918606607343",
+        "email": "karthikomer1407@gmail.com",
     }), 200
 
 # GET ALL ORDERS
