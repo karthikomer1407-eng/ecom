@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 
@@ -57,12 +57,12 @@ function Navbar() {
         <Link to="/">Home</Link>
         <Link to="/">Products</Link>
         <Link to="/cart">Cart</Link>
-        <Link to="/track-order">Track Order</Link>
+        <Link to="/orders">Orders</Link>
         <Link to="/admin/products">Admin</Link>
       </div>
 
       <div className="nav-actions">
-        <Link to="/track-order" className="navbar-track-mobile">Track</Link>
+        <Link to="/orders" className="navbar-track-mobile">Orders</Link>
         <button
           type="button"
           className="navbar-cart"

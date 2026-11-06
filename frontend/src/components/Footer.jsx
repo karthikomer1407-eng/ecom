@@ -17,7 +17,7 @@ function Footer() {
           <Link to="/">Home</Link>
           <Link to="/#collection">The Collection</Link>
           <Link to="/cart">Your Cart</Link>
-          <Link to="/track-order">Track Your Order</Link>
+          <Link to="/orders">My Orders & Support</Link>
         </div>
 
         <div className="footer-column">

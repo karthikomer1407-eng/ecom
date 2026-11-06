@@ -12,7 +12,7 @@ import AdminProducts from "./pages/AdminProducts";
 import AdminCategories from "./pages/AdminCategories";
 import Checkout from "./pages/Checkout";
 import AdminOrders from "./pages/AdminOrders";
-import TrackOrder from "./pages/TrackOrder";
+import Orders from "./pages/Orders";
 
 function ProtectedRoute({ children }) {
   return sessionStorage.getItem("adminToken")
@@ -68,7 +68,8 @@ function App() {
 
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
-          <Route path="/track-order" element={<TrackOrder />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/track-order" element={<Orders />} />
 
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route

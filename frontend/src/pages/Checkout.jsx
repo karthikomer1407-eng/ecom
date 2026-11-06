@@ -124,20 +124,44 @@ function Checkout() {
 
             window.dispatchEvent(new Event("cartUpdated"));
 
+            const confirmedOrderId = verificationResponse.data.order_id;
+
+            // Save order to user's device for easy lookup anytime
+            try {
+              const existingOrders = JSON.parse(
+                localStorage.getItem("hayati_my_orders") || "[]"
+              );
+              const updatedOrders = [
+                {
+                  order_id: confirmedOrderId,
+                  full_name: formData.fullName,
+                  email: formData.email,
+                  phone: formData.phone,
+                  date: new Date().toISOString(),
+                  total_amount: cart?.total_amount || 0,
+                },
+                ...existingOrders.filter(
+                  (item) => item.order_id !== confirmedOrderId
+                ),
+              ];
+              localStorage.setItem(
+                "hayati_my_orders",
+                JSON.stringify(updatedOrders)
+              );
+              localStorage.setItem("hayati_user_email", formData.email);
+              localStorage.setItem("hayati_user_phone", formData.phone);
+            } catch (storageError) {
+              console.warn("Could not save order to local storage:", storageError);
+            }
+
             if (verificationResponse.data.stock_issue) {
               alert(
-                "Payment succeeded, but some items are no longer available. " +
-                  "Please contact support with order ID #" +
-                  verificationResponse.data.order_id
-              );
-            } else {
-              alert(
-                "Payment successful! Order ID: #" +
-                  verificationResponse.data.order_id
+                "Payment succeeded, but an item had limited stock. Support has been notified for Order #" +
+                  confirmedOrderId
               );
             }
 
-            navigate("/");
+            navigate(`/orders?id=${confirmedOrderId}&new=true`);
           } catch (error) {
             console.error("Payment verification failed:", error);
 

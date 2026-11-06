@@ -414,109 +414,221 @@ def place_order():
 def track_order():
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
-        return jsonify({"error": "Order number, checkout email, and phone are required"}), 400
+        return jsonify({"error": "Order number or contact details are required"}), 400
 
     raw_order_id = data.get("order_id")
     email = data.get("email")
     phone = data.get("phone")
-    try:
-        order_id = int(raw_order_id)
-    except (TypeError, ValueError):
-        return jsonify({"error": "Enter a valid order number, email, and phone"}), 400
 
-    if (
-        order_id < 1
-        or not isinstance(email, str)
-        or not email.strip()
-        or not isinstance(phone, str)
-        or not phone.strip()
-    ):
-        return jsonify({"error": "Enter the checkout email and phone number"}), 400
+    order = None
 
-    order = Order.query.filter_by(id=order_id).first()
-    phone_digits = "".join(character for character in phone if character.isdigit())
-    if not phone_digits:
-        return jsonify({"error": "Enter the phone number used at checkout"}), 400
+    if raw_order_id:
+        clean_id_str = str(raw_order_id).replace("#", "").strip()
+        try:
+            order_id = int(clean_id_str)
+            order = Order.query.filter_by(id=order_id).first()
+        except (TypeError, ValueError):
+            return jsonify({"error": "Please enter a valid numeric Order ID (e.g. #4)"}), 400
 
-    order_phone_digits = (
-        "".join(character for character in order.phone if character.isdigit())
-        if order else ""
-    )
-    order_last10 = order_phone_digits[-10:] if len(order_phone_digits) >= 10 else order_phone_digits
-    input_last10 = phone_digits[-10:] if len(phone_digits) >= 10 else phone_digits
+    if not order and email and phone:
+        # Fall back to finding by email and phone
+        phone_digits = "".join(c for c in str(phone) if c.isdigit())
+        input_last10 = phone_digits[-10:] if len(phone_digits) >= 10 else phone_digits
+        matching_orders = Order.query.filter(
+            db.func.lower(Order.email) == str(email).strip().lower()
+        ).order_by(Order.created_at.desc()).all()
 
-    phone_matches = (order_phone_digits == phone_digits) or (order_last10 == input_last10)
-    if (
-        not order
-        or order.email.strip().casefold() != email.strip().casefold()
-        or not phone_matches
-    ):
-        return jsonify({"error": "We could not find an order with those details"}), 404
+        for o in matching_orders:
+            o_digits = "".join(c for c in o.phone if c.isdigit())
+            o_last10 = o_digits[-10:] if len(o_digits) >= 10 else o_digits
+            if o_digits == phone_digits or o_last10 == input_last10:
+                order = o
+                break
+
+    if not order:
+        return jsonify({"error": "We could not find an order matching the details provided"}), 404
+
+    # If verification email or phone was provided with order_id, verify it matches
+    if email and str(email).strip():
+        if order.email.strip().casefold() != str(email).strip().casefold():
+            return jsonify({"error": "The email entered does not match this Order ID"}), 403
+
+    if phone and str(phone).strip():
+        phone_digits = "".join(c for c in str(phone) if c.isdigit())
+        input_last10 = phone_digits[-10:] if len(phone_digits) >= 10 else phone_digits
+        o_digits = "".join(c for c in order.phone if c.isdigit())
+        o_last10 = o_digits[-10:] if len(o_digits) >= 10 else o_digits
+        if phone_digits and not (o_digits == phone_digits or o_last10 == input_last10):
+            return jsonify({"error": "The phone number entered does not match this Order ID"}), 403
+
+    items_data = []
+    for item in order.items:
+        prod = db.session.get(Product, item.product_id)
+        items_data.append({
+            "product_id": item.product_id,
+            "product_name": item.product_name,
+            "quantity": item.quantity,
+            "price": item.price_at_purchase,
+            "image": prod.image if prod else None,
+        })
 
     return jsonify({
         "order_id": order.id,
         "status": order.status,
         "payment_status": order.payment_status,
-        "created_at": order.created_at.strftime("%b %d, %Y") if order.created_at else None,
-        "items": [
-            {
-                "product_name": item.product_name,
-                "quantity": item.quantity,
-                "price": item.price_at_purchase,
-            }
-            for item in order.items
-        ],
+        "created_at": order.created_at.strftime("%b %d, %Y - %I:%M %p") if order.created_at else None,
+        "full_name": order.full_name,
+        "email": order.email,
+        "phone": order.phone,
+        "address": f"{order.address}, {order.city} - {order.postal_code}",
+        "city": order.city,
+        "postal_code": order.postal_code,
         "total_amount": order.total_amount,
+        "razorpay_order_id": order.razorpay_order_id,
+        "razorpay_payment_id": order.razorpay_payment_id,
+        "items": items_data,
     }), 200
 
 
 @orders_bp.route("/list", methods=["POST"])
 def list_customer_orders():
-    data = request.get_json(silent=True)
-    if not isinstance(data, dict):
-        return jsonify({"error": "Checkout email and phone number are required"}), 400
-
+    data = request.get_json(silent=True) or {}
+    order_ids = data.get("order_ids", [])
     email = data.get("email")
     phone = data.get("phone")
-    if (
-        not isinstance(email, str)
-        or not email.strip()
-        or not isinstance(phone, str)
-        or not phone.strip()
-    ):
-        return jsonify({"error": "Checkout email and phone number are required"}), 400
+    query_str = data.get("query")
 
-    phone_digits = "".join(character for character in phone if character.isdigit())
-    if not phone_digits:
-        return jsonify({"error": "Enter the email and phone number used at checkout"}), 400
+    matching_orders = []
 
-    input_last10 = phone_digits[-10:] if len(phone_digits) >= 10 else phone_digits
-    matching_orders = Order.query.filter(
-        db.func.lower(Order.email) == email.strip().lower()
-    ).order_by(Order.created_at.desc()).all()
-    orders = []
+    # 1. Search by list of recent order IDs from localStorage
+    if isinstance(order_ids, list) and order_ids:
+        valid_ids = []
+        for raw_id in order_ids:
+            try:
+                valid_ids.append(int(str(raw_id).replace("#", "").strip()))
+            except (ValueError, TypeError):
+                continue
+        if valid_ids:
+            found = Order.query.filter(Order.id.in_(valid_ids)).order_by(Order.created_at.desc()).all()
+            matching_orders.extend(found)
+
+    # 2. Search by query string (can be Order ID, email, or phone)
+    if query_str and str(query_str).strip():
+        q_cleaned = str(query_str).strip()
+        # Check if query is an Order ID
+        clean_num = q_cleaned.replace("#", "").strip()
+        if clean_num.isdigit():
+            order_by_id = Order.query.filter_by(id=int(clean_num)).first()
+            if order_by_id and order_by_id not in matching_orders:
+                matching_orders.append(order_by_id)
+
+        # Check if query matches email
+        if "@" in q_cleaned:
+            by_email = Order.query.filter(
+                db.func.lower(Order.email) == q_cleaned.lower()
+            ).order_by(Order.created_at.desc()).all()
+            for o in by_email:
+                if o not in matching_orders:
+                    matching_orders.append(o)
+
+        # Check if query matches phone
+        q_digits = "".join(c for c in q_cleaned if c.isdigit())
+        if len(q_digits) >= 7:
+            q_last10 = q_digits[-10:] if len(q_digits) >= 10 else q_digits
+            all_recent = Order.query.order_by(Order.created_at.desc()).limit(150).all()
+            for o in all_recent:
+                o_digits = "".join(c for c in o.phone if c.isdigit())
+                o_last10 = o_digits[-10:] if len(o_digits) >= 10 else o_digits
+                if (o_digits == q_digits or o_last10 == q_last10) and o not in matching_orders:
+                    matching_orders.append(o)
+
+    # 3. Search by explicit email and/or phone
+    if email and str(email).strip():
+        by_email = Order.query.filter(
+            db.func.lower(Order.email) == str(email).strip().lower()
+        ).order_by(Order.created_at.desc()).all()
+
+        if phone and str(phone).strip():
+            phone_digits = "".join(c for c in str(phone) if c.isdigit())
+            input_last10 = phone_digits[-10:] if len(phone_digits) >= 10 else phone_digits
+            for o in by_email:
+                o_digits = "".join(c for c in o.phone if c.isdigit())
+                o_last10 = o_digits[-10:] if len(o_digits) >= 10 else o_digits
+                if (o_digits == phone_digits or o_last10 == input_last10) and o not in matching_orders:
+                    matching_orders.append(o)
+        else:
+            for o in by_email:
+                if o not in matching_orders:
+                    matching_orders.append(o)
+
+    elif phone and str(phone).strip():
+        phone_digits = "".join(c for c in str(phone) if c.isdigit())
+        input_last10 = phone_digits[-10:] if len(phone_digits) >= 10 else phone_digits
+        all_recent = Order.query.order_by(Order.created_at.desc()).limit(150).all()
+        for o in all_recent:
+            o_digits = "".join(c for c in o.phone if c.isdigit())
+            o_last10 = o_digits[-10:] if len(o_digits) >= 10 else o_digits
+            if (o_digits == phone_digits or o_last10 == input_last10) and o not in matching_orders:
+                matching_orders.append(o)
+
+    if not matching_orders:
+        return jsonify({"error": "No orders found matching your search. Please check your Order ID, email, or phone number."}), 404
+
+    result = []
     for order in matching_orders:
-        o_digits = "".join(character for character in order.phone if character.isdigit())
-        o_last10 = o_digits[-10:] if len(o_digits) >= 10 else o_digits
-        if o_digits == phone_digits or o_last10 == input_last10:
-            orders.append(order)
-    if not orders:
-        return jsonify({"error": "We could not find orders with those details"}), 404
+        items_data = []
+        for item in order.items:
+            prod = db.session.get(Product, item.product_id)
+            items_data.append({
+                "product_id": item.product_id,
+                "product_name": item.product_name,
+                "quantity": item.quantity,
+                "price": item.price_at_purchase,
+                "image": prod.image if prod else None,
+            })
 
-    return jsonify([
-        {
+        result.append({
             "order_id": order.id,
             "status": order.status,
             "payment_status": order.payment_status,
-            "created_at": order.created_at.strftime("%b %d, %Y") if order.created_at else None,
-            "items": [
-                {"product_name": item.product_name, "quantity": item.quantity}
-                for item in order.items
-            ],
+            "created_at": order.created_at.strftime("%b %d, %Y - %I:%M %p") if order.created_at else None,
+            "full_name": order.full_name,
+            "email": order.email,
+            "phone": order.phone,
+            "address": f"{order.address}, {order.city} - {order.postal_code}",
+            "city": order.city,
+            "postal_code": order.postal_code,
             "total_amount": order.total_amount,
-        }
-        for order in orders
-    ]), 200
+            "items": items_data,
+        })
+
+    return jsonify(result), 200
+
+
+@orders_bp.route("/support", methods=["POST"])
+def customer_support_inquiry():
+    data = request.get_json(silent=True) or {}
+    order_id = data.get("order_id")
+    name = data.get("name", "").strip()
+    email = data.get("email", "").strip()
+    phone = data.get("phone", "").strip()
+    subject = data.get("subject", "Order Inquiry").strip()
+    message = data.get("message", "").strip()
+
+    if not message:
+        return jsonify({"error": "Please enter your message or question"}), 400
+
+    ticket_id = f"HAYATI-CARE-{uuid.uuid4().hex[:6].upper()}"
+    current_app.logger.info(
+        f"[Customer Support] Ticket: {ticket_id} | Order: {order_id} | Name: {name} | Email: {email} | Msg: {message}"
+    )
+
+    return jsonify({
+        "success": True,
+        "message": "Your support request has been received by our Royal Concierge. We will reply via WhatsApp or email shortly.",
+        "ticket_id": ticket_id,
+        "order_id": order_id,
+    }), 200
 
 # GET ALL ORDERS
 @orders_bp.route("/", methods=["GET"])
@@ -555,7 +667,7 @@ def get_all_orders():
 @orders_bp.route("/<int:id>/status", methods=["PUT"])
 @token_required
 def update_order_status(id):
-    order = Order.query.get(id)
+    order = db.session.get(Order, id)
     if not order:
         return jsonify({"error": "Order not found"}), 404
 

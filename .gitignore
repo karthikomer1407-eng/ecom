@@ -24,8 +24,9 @@ instance/
 # Node & Frontend Build Artifacts
 node_modules/
 frontend/node_modules/
-dist/
 frontend/dist/
+!backend/dist/
+!backend/dist/**
 dist-ssr/
 *.local
 
