@@ -88,10 +88,39 @@ function Hero({ lowStockProducts = [] }) {
   const videoRef = useRef(null);
 
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = true;
-      videoRef.current.play().catch(() => {});
-    }
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.muted = true;
+    video.defaultMuted = true;
+    video.setAttribute("muted", "");
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "true");
+
+    const tryPlay = () => {
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Handled on first user touch below
+        });
+      }
+    };
+
+    tryPlay();
+
+    const handleTouchUnlock = () => {
+      if (video.paused) {
+        video.play().catch(() => {});
+      }
+    };
+
+    window.addEventListener("touchstart", handleTouchUnlock, { passive: true, once: true });
+    window.addEventListener("click", handleTouchUnlock, { passive: true, once: true });
+
+    return () => {
+      window.removeEventListener("touchstart", handleTouchUnlock);
+      window.removeEventListener("click", handleTouchUnlock);
+    };
   }, []);
 
   const toggleSound = () => {
@@ -132,8 +161,10 @@ function Hero({ lowStockProducts = [] }) {
           poster={heroVideoPoster}
           autoPlay
           loop
-          muted={isMuted}
+          muted
+          defaultMuted
           playsInline
+          webkit-playsinline="true"
           preload="auto"
         >
           <source src={heroVideo} type="video/mp4" />

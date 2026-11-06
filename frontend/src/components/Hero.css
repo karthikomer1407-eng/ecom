@@ -28,6 +28,7 @@
   z-index: 1;
   overflow: hidden;
   pointer-events: none;
+  background: #070605 url("../assets/hero-video-poster.jpg") center center / cover no-repeat;
 }
 
 .arabic-hero-bg-video {
@@ -887,6 +888,13 @@
   }
 }
 
+@media (max-width: 900px) {
+  .flacon-floating-dossier,
+  .flacon-switcher {
+    display: none !important;
+  }
+}
+
 @media (max-width: 768px) {
   .arabic-hero {
     min-height: calc(100vh - 74px);
@@ -894,70 +902,83 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    position: relative;
   }
 
   .arabic-hero-bg-video {
-    object-position: center center;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100% !important;
+    min-height: 100% !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
   }
 
   .arabic-hero-bg-overlay {
     background: 
       linear-gradient(180deg, 
-        rgba(7, 6, 5, 0.88) 0%, 
-        rgba(7, 6, 5, 0.68) 45%, 
-        rgba(7, 6, 5, 0.92) 100%
-      );
+        rgba(7, 6, 5, 0.35) 0%, 
+        rgba(7, 6, 5, 0.08) 35%, 
+        rgba(7, 6, 5, 0.20) 70%, 
+        rgba(7, 6, 5, 0.65) 100%
+      ) !important;
+  }
+
+  .arabic-hero-ambient-glow {
+    opacity: 0.25 !important;
+    filter: blur(50px) !important;
   }
 
   .arabic-hero-container {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    padding: 12px 4% 8px;
-    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    padding: 24px 5% 18px;
+    gap: 12px;
     flex: 1;
+    position: relative;
+    z-index: 3;
   }
 
-  /* Fragrance Switcher Tabs & Sound Toggle at top of mobile hero */
+  /* Remove switcher and floating dossier completely on mobile */
+  .flacon-floating-dossier,
+  .flacon-switcher {
+    display: none !important;
+  }
+
+  /* Keep sound toggle neatly in top-right of mobile hero */
   .arabic-hero-stage {
-    order: -1;
-    width: 100%;
-    align-items: center;
-    gap: 6px;
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 10;
+    width: auto;
+    margin: 0;
+    padding: 0;
   }
 
   .hero-stage-top-bar {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 6px;
-    width: 100%;
+    justify-content: flex-end;
+    width: auto;
+    margin: 0;
+    padding: 0;
   }
 
   .hero-sound-toggle-btn {
-    padding: 6px 10px;
-    font-size: 9.5px;
-    gap: 4px;
-    flex-shrink: 0;
-  }
-
-  .flacon-switcher {
-    padding: 2px 3px;
-    gap: 3px;
-    flex: 1;
-    justify-content: center;
-  }
-
-  .flacon-tab {
-    padding: 6px 10px;
+    padding: 7px 12px;
     font-size: 10px;
-    gap: 4px;
-    flex: 1;
-    justify-content: center;
-  }
-
-  .flacon-tab-ar {
-    display: none;
+    gap: 5px;
+    border-radius: 999px;
+    background: rgba(14, 11, 8, 0.72);
+    border: 1px solid rgba(212, 175, 55, 0.45);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
   }
 
   /* Narrative elements in compact mobile grid */
@@ -1040,65 +1061,6 @@
 
   .accord-ar {
     font-size: 11px;
-  }
-
-  /* Compact Floating Dossier Status Bar on Mobile */
-  .flacon-floating-dossier {
-    max-width: 100%;
-    width: 100%;
-    padding: 8px 12px;
-    gap: 5px;
-    background: rgba(14, 11, 8, 0.78);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6);
-  }
-
-  .dossier-top-badge {
-    display: none;
-  }
-
-  .dossier-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .dossier-title {
-    font-size: 13.5px;
-  }
-
-  .dossier-ar {
-    display: none;
-  }
-
-  .dossier-price {
-    font-size: 15px;
-  }
-
-  .dossier-stats {
-    padding: 3px 6px;
-    gap: 8px;
-  }
-
-  .stat-pill-label {
-    font-size: 8.5px;
-  }
-
-  .stat-pill-value {
-    font-size: 9.5px;
-  }
-
-  .stat-pill-dots .dot {
-    width: 5px;
-    height: 5px;
-  }
-
-  .dossier-accents {
-    display: none;
-  }
-
-  .dossier-cta-btn {
-    display: none;
   }
 
   /* 2-Column Side-by-Side Mobile CTA Grid */
