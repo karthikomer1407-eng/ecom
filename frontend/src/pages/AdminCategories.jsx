@@ -2,9 +2,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../services/api";
+import { useSmoothScroll } from "../components/SmoothScroll";
 import "./AdminCategories.css";
 
 export default function AdminCategories() {
+  const lenisRef = useSmoothScroll();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -81,7 +83,11 @@ export default function AdminCategories() {
       description: category.description || "",
     });
     setError("");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (lenisRef?.current) {
+      lenisRef.current.scrollTo(0);
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   const handleDelete = async (category) => {

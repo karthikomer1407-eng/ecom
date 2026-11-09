@@ -5,6 +5,7 @@ import heroVideoPoster from "../assets/hero-video-poster.jpg";
 import orientalBg from "../assets/hayati-luxury-hero-bg.jpg";
 import ahmarBg from "../assets/xtr.jpeg";
 import amberBg from "../assets/Hayati Elixirs Amber Stone Still Life.png";
+import { useSmoothScroll } from "./SmoothScroll";
 
 const HERO_FRAGRANCES = [
   {
@@ -86,6 +87,7 @@ function Hero({ lowStockProducts = [] }) {
   const [activeNoteTab, setActiveNoteTab] = useState(null);
   const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef(null);
+  const lenisRef = useSmoothScroll();
 
   useEffect(() => {
     const video = videoRef.current;
@@ -142,7 +144,11 @@ function Hero({ lowStockProducts = [] }) {
     e.preventDefault();
     const section = document.getElementById("collection");
     if (section) {
-      section.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (lenisRef?.current) {
+        lenisRef.current.scrollTo(section);
+      } else {
+        section.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     }
   };
 
