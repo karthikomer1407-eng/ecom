@@ -7,14 +7,12 @@ const getBaseURL = () => {
     return `${import.meta.env.VITE_API_URL.replace(/\/+$/, "")}/api`;
   }
   if (typeof window !== "undefined") {
-    const host = window.location.hostname;
-    if (host === "localhost" || host === "127.0.0.1") {
-      return "http://127.0.0.1:5000/api";
-    }
-    if (host.endsWith(".onrender.com")) {
+    if (window.location.hostname.endsWith(".onrender.com")) {
       return `${window.location.origin}/api`;
     }
   }
+  // Use the same catalog for local laptop previews and the deployed store.
+  // Set VITE_API_URL to a local Flask server when developing against local data.
   return `${RENDER_BACKEND_URL}/api`;
 };
 

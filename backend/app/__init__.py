@@ -22,17 +22,24 @@ def create_app():
         supports_credentials=True,
     )
 
-    # Database configuration: Cloud DB (DATABASE_URL) > SQLite fallback on Render > Local MySQL
+    # Use a shared database in production. A Render service's local filesystem is
+    # temporary unless its SQLite file is placed on a persistent disk.
     database_url = os.environ.get("DATABASE_URL")
+    persistent_data_dir = os.environ.get("PERSISTENT_DATA_DIR")
     if database_url:
         # Support Render/Heroku postgres:// URL prefix with SQLAlchemy
         if database_url.startswith("postgres://"):
             database_url = database_url.replace("postgres://", "postgresql://", 1)
         app.config["SQLALCHEMY_DATABASE_URI"] = database_url
     elif os.environ.get("RENDER"):
-        # On Render without external DATABASE_URL, fallback to SQLite instance database so it boots up cleanly
-        os.makedirs(app.instance_path, exist_ok=True)
-        sqlite_path = os.path.join(app.instance_path, "ecommerce.db")
+        if not persistent_data_dir:
+            raise RuntimeError(
+                "Set DATABASE_URL to a managed database, or set PERSISTENT_DATA_DIR "
+                "to the mount path of a persistent disk. Refusing to use temporary "
+                "Render storage for product data."
+            )
+        os.makedirs(persistent_data_dir, exist_ok=True)
+        sqlite_path = os.path.join(persistent_data_dir, "ecommerce.db")
         app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{sqlite_path}"
     else:
         # Local development default
@@ -47,14 +54,17 @@ def create_app():
     )
 
     # Product image upload configuration
-    upload_folder = os.path.abspath(
-        os.path.join(
-            app.root_path,
-            "..",
-            "uploads",
-            "products"
+    if persistent_data_dir:
+        upload_folder = os.path.join(persistent_data_dir, "uploads", "products")
+    else:
+        upload_folder = os.path.abspath(
+            os.path.join(
+                app.root_path,
+                "..",
+                "uploads",
+                "products"
+            )
         )
-    )
 
     os.makedirs(upload_folder, exist_ok=True)
 
@@ -224,42 +234,21 @@ def create_app():
         },
     ]
 
-    # Create database tables and seed/sync full product catalog
+    # Create database tables and seed the starter catalog only for a new store.
+    # Never delete products or overwrite admin edits during an app restart.
     with app.app_context():
         db.create_all()
         try:
-            from .models import CartItem, Category, Product
+            from .models import Category, Product
 
-            cat = Category.query.filter_by(name="Perfumes").first()
-            if not cat:
+            if not Category.query.first():
                 cat = Category(
                     name="Perfumes",
                     description="Premium fragrances and royal oud",
                 )
                 db.session.add(cat)
-                db.session.commit()
-
-            # Remove old placeholder dummy items if they are present on Render
-            dummy_names = {"Ocean Elixir", "Royal Essence", "Velvet Musk", "Midnight Noir", "Amber Royale"}
-            for dummy_p in Product.query.filter(Product.name.in_(dummy_names)).all():
-                try:
-                    CartItem.query.filter_by(product_id=dummy_p.id).delete()
-                    db.session.delete(dummy_p)
-                except Exception:
-                    db.session.rollback()
-            db.session.commit()
-
-            # Upsert full luxury catalog
-            for p_data in luxury_catalog:
-                prod = Product.query.filter_by(name=p_data["name"]).first()
-                if prod:
-                    prod.description = p_data["description"]
-                    prod.price = p_data["price"]
-                    prod.sale_price = p_data["sale_price"]
-                    prod.stock = p_data["stock"]
-                    prod.image = p_data["image"]
-                    prod.category_id = cat.id
-                else:
+                db.session.flush()
+                for p_data in luxury_catalog:
                     db.session.add(Product(
                         name=p_data["name"],
                         description=p_data["description"],
@@ -269,7 +258,7 @@ def create_app():
                         image=p_data["image"],
                         category_id=cat.id,
                     ))
-            db.session.commit()
+                db.session.commit()
 
             # Ensure Admin User exists in database (DD / Dcruiz1407)
             from .models import AdminUser

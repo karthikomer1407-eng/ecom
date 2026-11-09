@@ -50,7 +50,7 @@ function Home() {
       .get("/products/?sort=newest")
       .then((response) => {
         if (!isMounted) return;
-        if (Array.isArray(response.data) && response.data.length > 0) {
+        if (Array.isArray(response.data)) {
           setProducts(response.data);
           try {
             localStorage.setItem(CACHE_KEY, JSON.stringify(response.data));

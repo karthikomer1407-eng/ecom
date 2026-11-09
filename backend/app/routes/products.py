@@ -8,7 +8,7 @@ from app.routes.auth import token_required
 product_bp = Blueprint("products", __name__, url_prefix="/api/products")
 
 
-# GET ALL PRODUCTS (Public - High Performance with joinedload & edge caching)
+# GET ALL PRODUCTS (Public)
 @product_bp.route("/", methods=["GET"])
 def get_products():
     sort = request.args.get("sort", "newest")
@@ -47,7 +47,7 @@ def get_products():
         })
 
     response = jsonify(result)
-    response.headers["Cache-Control"] = "public, max-age=60, s-maxage=300, stale-while-revalidate=86400"
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     return response, 200
 
 
@@ -74,7 +74,7 @@ def get_product(id):
             "name": product.category.name if product.category else ""
         }
     })
-    response.headers["Cache-Control"] = "public, max-age=60, s-maxage=300, stale-while-revalidate=86400"
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     return response, 200
 
 
