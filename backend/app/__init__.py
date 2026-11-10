@@ -30,6 +30,8 @@ def create_app():
         # Support Render/Heroku postgres:// URL prefix with SQLAlchemy
         if database_url.startswith("postgres://"):
             database_url = database_url.replace("postgres://", "postgresql://", 1)
+        elif database_url.startswith("mysql://"):
+            database_url = database_url.replace("mysql://", "mysql+pymysql://", 1)
         app.config["SQLALCHEMY_DATABASE_URI"] = database_url
     elif os.environ.get("RENDER"):
         if not persistent_data_dir:
