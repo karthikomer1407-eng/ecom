@@ -24,7 +24,12 @@ def create_app():
 
     # Use a shared database in production. A Render service's local filesystem is
     # temporary unless its SQLite file is placed on a persistent disk.
-    database_url = os.environ.get("DATABASE_URL")
+    # Prefer Railway's public MySQL URL when configured; MYSQL_URL is private
+    # to Railway's network and cannot be reached by this Render-hosted backend.
+    database_url = (
+        os.environ.get("MYSQL_PUBLIC_URL")
+        or os.environ.get("DATABASE_URL")
+    )
     persistent_data_dir = os.environ.get("PERSISTENT_DATA_DIR")
     if database_url:
         # Support Render/Heroku postgres:// URL prefix with SQLAlchemy
