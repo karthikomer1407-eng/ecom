@@ -13,6 +13,7 @@ import AdminCategories from "./pages/AdminCategories";
 import Checkout from "./pages/Checkout";
 import AdminOrders from "./pages/AdminOrders";
 import Orders from "./pages/Orders";
+import "./responsive.css";
 
 function ProtectedRoute({ children }) {
   return sessionStorage.getItem("adminToken")

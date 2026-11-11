@@ -28,7 +28,7 @@
   z-index: 1;
   overflow: hidden;
   pointer-events: none;
-  background: #070605 url("../assets/hero-video-poster.jpg") center center / cover no-repeat;
+  background: #070605 url("../assets/hero-video-poster.webp") center center / cover no-repeat;
 }
 
 .arabic-hero-bg-video {

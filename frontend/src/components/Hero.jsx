@@ -1,10 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./Hero.css";
 import heroVideo from "../assets/hero-video.mp4";
-import heroVideoPoster from "../assets/hero-video-poster.jpg";
-import orientalBg from "../assets/hayati-luxury-hero-bg.jpg";
-import ahmarBg from "../assets/xtr.jpeg";
-import amberBg from "../assets/Hayati Elixirs Amber Stone Still Life.png";
+import heroVideoPoster from "../assets/hero-video-poster.webp";
 import { useSmoothScroll } from "./SmoothScroll";
 
 const HERO_FRAGRANCES = [
@@ -14,7 +11,6 @@ const HERO_FRAGRANCES = [
     arabicName: "أورينتال عود • قصر الشرق",
     concentration: "Extrait de Parfum (50% Pure Oil)",
     badge: "Imperial Palace Edition",
-    bgImage: orientalBg,
     alt: "Hayati Elixirs Oriental Oud luxury perfume bottle with 24k gold engraved Arabesque cap, amber flacon, glowing amber resins, and incense smoke in an Arabian palace",
     headlineLead: "The Sovereign Soul of",
     headlineMain: "Arabian Oud & Amber",
@@ -38,7 +34,6 @@ const HERO_FRAGRANCES = [
     arabicName: "أحمر روج • عود وعنبر أحمر",
     concentration: "Extrait de Parfum (50% Pure Oil)",
     badge: "Royal Oud & Amber Noir",
-    bgImage: ahmarBg,
     alt: "Ahmar Rouge faceted ruby red perfume bottle with engraved gold cap on dark volcanic stone with raw agarwood bark and amber crystals",
     headlineLead: "Smoldering Passion of",
     headlineMain: "Ahmar Rouge Noir",
@@ -62,7 +57,6 @@ const HERO_FRAGRANCES = [
     arabicName: "عنبر رويال • خلاصة الذهب",
     concentration: "Extrait de Parfum (50% Pure Oil)",
     badge: "Solar Amber Signature",
-    bgImage: amberBg,
     alt: "Amber Royale crystal perfume bottle on warm limestone with white desert blossoms and golden sunbeams",
     headlineLead: "Luminous Majesty of",
     headlineMain: "Sunlit Amber Royale",
@@ -85,10 +79,34 @@ const HERO_FRAGRANCES = [
 function Hero({ lowStockProducts = [] }) {
   const [activeFragranceId, setActiveFragranceId] = useState("oriental");
   const [activeNoteTab, setActiveNoteTab] = useState(null);
+  const [shouldPlayHeroVideo, setShouldPlayHeroVideo] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia("(min-width: 901px)").matches
+  );
   const videoRef = useRef(null);
   const lenisRef = useSmoothScroll();
 
   useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 901px)");
+    const updateVideoVisibility = () => setShouldPlayHeroVideo(mediaQuery.matches);
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", updateVideoVisibility);
+    } else {
+      mediaQuery.addListener(updateVideoVisibility);
+    }
+
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener("change", updateVideoVisibility);
+      } else {
+        mediaQuery.removeListener(updateVideoVisibility);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!shouldPlayHeroVideo) return;
+
     const video = videoRef.current;
     if (!video) return;
 
@@ -122,7 +140,7 @@ function Hero({ lowStockProducts = [] }) {
       window.removeEventListener("touchstart", handleTouchUnlock);
       window.removeEventListener("click", handleTouchUnlock);
     };
-  }, []);
+  }, [shouldPlayHeroVideo]);
 
   const activeFragrance =
     HERO_FRAGRANCES.find((item) => item.id === activeFragranceId) ||
@@ -148,21 +166,21 @@ function Hero({ lowStockProducts = [] }) {
           LUXURY HERO VIDEO BACKGROUND THAT FILLS SCREEN PERFECTLY
           ==================================================================== */}
       <div className="arabic-hero-bg-wrapper" aria-hidden="true">
-        <video
-          ref={videoRef}
-          className="arabic-hero-bg-video"
-          src={heroVideo}
-          poster={heroVideoPoster}
-          autoPlay
-          loop
-          muted
-          defaultMuted
-          playsInline
-          webkit-playsinline="true"
-          preload="auto"
-        >
-          <source src={heroVideo} type="video/mp4" />
-        </video>
+        {shouldPlayHeroVideo && (
+          <video
+            ref={videoRef}
+            className="arabic-hero-bg-video"
+            src={heroVideo}
+            poster={heroVideoPoster}
+            autoPlay
+            loop
+            muted
+            defaultMuted
+            playsInline
+            webkit-playsinline="true"
+            preload="metadata"
+          />
+        )}
 
         {/* Multi-layered cinematic luxury vignette overlay */}
         <div className="arabic-hero-bg-overlay" />

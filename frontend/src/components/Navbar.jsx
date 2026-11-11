@@ -6,6 +6,7 @@ function Navbar() {
   const navigate = useNavigate();
 
   const [cartCount, setCartCount] = useState(0);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const fetchCartCount = async () => {
     try {
@@ -53,20 +54,26 @@ function Navbar() {
         Hayati Elixirs
       </Link>
 
-      <div className="nav-links">
-        <Link to="/">Home</Link>
-        <Link to="/">Products</Link>
-        <Link to="/cart">Cart</Link>
-        <Link to="/orders">Orders</Link>
-        <Link to="/admin/products">Admin</Link>
+      <div
+        className={`nav-links ${isMobileMenuOpen ? "is-open" : ""}`}
+        id="primary-navigation"
+        aria-label="Main navigation"
+      >
+        <Link to="/" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
+        <Link to="/#collection" onClick={() => setIsMobileMenuOpen(false)}>Products</Link>
+        <Link to="/cart" onClick={() => setIsMobileMenuOpen(false)}>Cart</Link>
+        <Link to="/orders" onClick={() => setIsMobileMenuOpen(false)}>Orders</Link>
+        <Link to="/admin/products" onClick={() => setIsMobileMenuOpen(false)}>Admin</Link>
       </div>
 
       <div className="nav-actions">
-        <Link to="/orders" className="navbar-track-mobile">Orders</Link>
         <button
           type="button"
           className="navbar-cart"
-          onClick={() => navigate("/cart")}
+          onClick={() => {
+            setIsMobileMenuOpen(false);
+            navigate("/cart");
+          }}
           aria-label={`Cart, ${cartCount} items`}
         >
           <svg
@@ -88,6 +95,31 @@ function Navbar() {
           {cartCount > 0 && (
             <span className="cart-count">{cartCount}</span>
           )}
+        </button>
+        <button
+          type="button"
+          className="navbar-menu-toggle"
+          aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-controls="primary-navigation"
+          aria-expanded={isMobileMenuOpen}
+          onClick={() => setIsMobileMenuOpen((open) => !open)}
+        >
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            width="22"
+            height="22"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          >
+            {isMobileMenuOpen ? (
+              <path d="M6 6l12 12M18 6L6 18" />
+            ) : (
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            )}
+          </svg>
         </button>
       </div>
     </nav>
