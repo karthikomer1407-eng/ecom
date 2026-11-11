@@ -31,7 +31,7 @@ function Home() {
   const [addingCartId, setAddingCartId] = useState(null);
 
   // Sort & Filter state
-  const [sortBy, setSortBy] = useState("newest"); // "newest" (top of grid), "low-stock", "price-asc", "price-desc", "discount", "name-asc", "oldest"
+  const [sortBy, setSortBy] = useState("price-desc"); // "newest" (top of grid), "low-stock", "price-asc", "price-desc", "discount", "name-asc", "oldest"
   const [activeFilter, setActiveFilter] = useState("all"); // "all", "scarcity", "sale"
 
   // Pinned to top IDs (persists in localStorage)
@@ -167,11 +167,13 @@ function Home() {
 
   // Sort products
   const sortedProducts = [...filteredProducts].sort((a, b) => {
-    // 1. Pinned perfumes always sit at the very top of the grid
-    const aPinned = pinnedIds.includes(a.id);
-    const bPinned = pinnedIds.includes(b.id);
-    if (aPinned && !bPinned) return -1;
-    if (!aPinned && bPinned) return 1;
+    // Pinned perfumes stay on top except when the user asks for a strict price order.
+    if (sortBy !== "price-desc") {
+      const aPinned = pinnedIds.includes(a.id);
+      const bPinned = pinnedIds.includes(b.id);
+      if (aPinned && !bPinned) return -1;
+      if (!aPinned && bPinned) return 1;
+    }
 
     // 2. Main sort option
     switch (sortBy) {
