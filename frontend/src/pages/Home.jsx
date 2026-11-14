@@ -8,7 +8,7 @@ import INITIAL_PRODUCTS from "../data/initialProducts";
 
 const CACHE_KEY = "hayati_cached_products";
 
-function Home() {
+function Home({ isIntroComplete = false }) {
   const navigate = useNavigate();
   const [products, setProducts] = useState(() => {
     try {
@@ -233,7 +233,10 @@ function Home() {
   return (
     <main className="home">
       {/* ARABIC LUXURY HERO SECTION */}
-      <Hero lowStockProducts={lowStockProducts} />
+      <Hero
+        lowStockProducts={lowStockProducts}
+        isIntroComplete={isIntroComplete}
+      />
 
       {/* PRODUCTS SECTION */}
       <section className="products-section" id="collection">

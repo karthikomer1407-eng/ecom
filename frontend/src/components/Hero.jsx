@@ -76,36 +76,14 @@ const HERO_FRAGRANCES = [
   },
 ];
 
-function Hero({ lowStockProducts = [] }) {
+function Hero({ lowStockProducts = [], isIntroComplete = false }) {
   const [activeFragranceId, setActiveFragranceId] = useState("oriental");
   const [activeNoteTab, setActiveNoteTab] = useState(null);
-  const [shouldPlayHeroVideo, setShouldPlayHeroVideo] = useState(() =>
-    typeof window !== "undefined" && window.matchMedia("(min-width: 901px)").matches
-  );
   const videoRef = useRef(null);
   const lenisRef = useSmoothScroll();
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(min-width: 901px)");
-    const updateVideoVisibility = () => setShouldPlayHeroVideo(mediaQuery.matches);
-
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", updateVideoVisibility);
-    } else {
-      mediaQuery.addListener(updateVideoVisibility);
-    }
-
-    return () => {
-      if (mediaQuery.removeEventListener) {
-        mediaQuery.removeEventListener("change", updateVideoVisibility);
-      } else {
-        mediaQuery.removeListener(updateVideoVisibility);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!shouldPlayHeroVideo) return;
+    if (!isIntroComplete) return;
 
     const video = videoRef.current;
     if (!video) return;
@@ -116,31 +94,23 @@ function Hero({ lowStockProducts = [] }) {
     video.setAttribute("playsinline", "");
     video.setAttribute("webkit-playsinline", "true");
 
-    const tryPlay = () => {
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          // Handled on first user touch below
-        });
-      }
+    const tryPlay = () => video.play().catch(() => {});
+    const handleUserStart = () => {
+      if (video.paused) tryPlay();
     };
 
+    video.addEventListener("canplay", tryPlay, { once: true });
     tryPlay();
 
-    const handleTouchUnlock = () => {
-      if (video.paused) {
-        video.play().catch(() => {});
-      }
-    };
-
-    window.addEventListener("touchstart", handleTouchUnlock, { passive: true, once: true });
-    window.addEventListener("click", handleTouchUnlock, { passive: true, once: true });
+    window.addEventListener("touchstart", handleUserStart, { passive: true, once: true });
+    window.addEventListener("click", handleUserStart, { passive: true, once: true });
 
     return () => {
-      window.removeEventListener("touchstart", handleTouchUnlock);
-      window.removeEventListener("click", handleTouchUnlock);
+      video.removeEventListener("canplay", tryPlay);
+      window.removeEventListener("touchstart", handleUserStart);
+      window.removeEventListener("click", handleUserStart);
     };
-  }, [shouldPlayHeroVideo]);
+  }, [isIntroComplete]);
 
   const activeFragrance =
     HERO_FRAGRANCES.find((item) => item.id === activeFragranceId) ||
@@ -166,7 +136,7 @@ function Hero({ lowStockProducts = [] }) {
           LUXURY HERO VIDEO BACKGROUND THAT FILLS SCREEN PERFECTLY
           ==================================================================== */}
       <div className="arabic-hero-bg-wrapper" aria-hidden="true">
-        {shouldPlayHeroVideo && (
+        {isIntroComplete && (
           <video
             ref={videoRef}
             className="arabic-hero-bg-video"

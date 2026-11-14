@@ -54,7 +54,10 @@ function App() {
 
       <main>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route
+            path="/"
+            element={<Home isIntroComplete={!showPreloader} />}
+          />
 
           <Route path="/product/:id" element={<ProductDetails />} />
 
