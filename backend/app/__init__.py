@@ -3,6 +3,7 @@ import os
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+from werkzeug.exceptions import NotFound
 
 from .extensions import db
 
@@ -76,6 +77,11 @@ def create_app():
     os.makedirs(upload_folder, exist_ok=True)
 
     app.config["UPLOAD_FOLDER"] = upload_folder
+    # Keep the checked-in catalog images available when production uses a
+    # persistent upload disk that does not contain the original seed files.
+    app.config["PACKAGED_UPLOAD_FOLDER"] = os.path.abspath(
+        os.path.join(app.root_path, "..", "uploads", "products")
+    )
     app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 
     # Initialize extensions
@@ -297,11 +303,23 @@ def create_app():
     # Serve uploaded product images with high-performance immutable caching
     @app.route("/uploads/products/<path:filename>")
     def uploaded_product_image(filename):
-        response = send_from_directory(
-            app.config["UPLOAD_FOLDER"],
-            filename,
-            max_age=31536000,
-        )
+        try:
+            response = send_from_directory(
+                app.config["UPLOAD_FOLDER"],
+                filename,
+                max_age=31536000,
+            )
+        except NotFound:
+            packaged_folder = app.config["PACKAGED_UPLOAD_FOLDER"]
+            if os.path.realpath(packaged_folder) == os.path.realpath(
+                app.config["UPLOAD_FOLDER"]
+            ):
+                raise
+            response = send_from_directory(
+                packaged_folder,
+                filename,
+                max_age=31536000,
+            )
         response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
         return response
 
